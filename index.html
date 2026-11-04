@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BDR Reply Desk</title>
+<style>
+:root{
+  --bg:#f6f5f2;--panel:#ffffff;--ink:#1d1f24;--ink2:#5b606b;--line:#e3e1db;--accent:#1f5fbf;--accent-ink:#ffffff;
+  --hot:#0f7a4a;--hot-bg:#e3f4ea;--warm:#8a5a00;--warm-bg:#fbf0d9;--warn:#9a4a00;--warn-bg:#fde8d7;
+  --cool:#3d4f6b;--cool-bg:#e7ecf4;--stop:#a3202a;--stop-bg:#fbe3e4;--muted:#5b606b;--muted-bg:#eeede9;--sel:#eef3fc;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15171b;--panel:#1d2026;--ink:#e9eaee;--ink2:#a2a7b2;--line:#2e323a;--accent:#6aa0ff;--accent-ink:#0d1320;
+  --hot:#6fd3a1;--hot-bg:#16352a;--warm:#f0c26b;--warm-bg:#3a2f17;--warn:#f5a66a;--warn-bg:#3d2617;
+  --cool:#a9bbd9;--cool-bg:#232c3a;--stop:#ff8a92;--stop-bg:#3d1c20;--muted:#a2a7b2;--muted-bg:#272a31;--sel:#22304a;}}
+:root[data-theme="dark"]{
+  --bg:#15171b;--panel:#1d2026;--ink:#e9eaee;--ink2:#a2a7b2;--line:#2e323a;--accent:#6aa0ff;--accent-ink:#0d1320;
+  --hot:#6fd3a1;--hot-bg:#16352a;--warm:#f0c26b;--warm-bg:#3a2f17;--warn:#f5a66a;--warn-bg:#3d2617;
+  --cool:#a9bbd9;--cool-bg:#232c3a;--stop:#ff8a92;--stop-bg:#3d1c20;--muted:#a2a7b2;--muted-bg:#272a31;--sel:#22304a;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:20px 16px 8px;max-width:1280px;margin:0 auto}
+h1{font-size:22px;margin:0}
+.tag{color:var(--ink2);margin:2px 0 0}
+nav{display:flex;gap:4px;max-width:1280px;margin:8px auto 0;padding:0 16px;flex-wrap:wrap}
+nav button{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 14px;border-radius:999px;cursor:pointer;font:inherit}
+nav button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+main{max-width:1280px;margin:0 auto;padding:12px 16px 40px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.stat span{color:var(--ink2);font-size:13px}
+.desk{display:grid;grid-template-columns:300px minmax(0,1fr) minmax(0,1.15fr);gap:12px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
+.panel h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin:0 0 10px}
+.queue{list-style:none;margin:0;padding:0;max-height:640px;overflow:auto}
+.queue li{padding:9px 10px;border-radius:8px;cursor:pointer;border:1px solid transparent;margin-bottom:4px}
+.queue li:hover{border-color:var(--line)}
+.queue li.sel{background:var(--sel);border-color:var(--accent)}
+.queue .who{font-weight:600;display:flex;justify-content:space-between;gap:6px}
+.queue .sub{color:var(--ink2);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.done-mark{color:var(--hot);font-size:12px;font-weight:600}
+.vchip{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px;border:1px solid var(--line);color:var(--ink2);margin-left:4px}
+.chip{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;margin-top:4px}
+.t-hot{color:var(--hot);background:var(--hot-bg)}.t-warm{color:var(--warm);background:var(--warm-bg)}
+.t-warn{color:var(--warn);background:var(--warn-bg)}.t-cool{color:var(--cool);background:var(--cool-bg)}
+.t-stop{color:var(--stop);background:var(--stop-bg)}.t-muted{color:var(--muted);background:var(--muted-bg)}
+.meta{color:var(--ink2);font-size:13px;margin-bottom:8px;word-break:break-word}
+.body{white-space:pre-wrap;border-left:3px solid var(--line);padding:4px 0 4px 12px;margin:0}
+mark{background:var(--warm-bg);color:inherit;padding:0 2px;border-radius:3px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.k{color:var(--ink2);font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin:12px 0 4px}
+.facts{margin:0;padding-left:18px}
+.action{padding:10px 12px;border-radius:8px;background:var(--muted-bg)}
+.checklist label{display:flex;gap:8px;align-items:flex-start;padding:3px 0}
+textarea,select,input[type=text],input[type=number]{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px}
+textarea{min-height:200px;resize:vertical}
+.btn{font:inherit;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 14px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.note{font-size:13px;color:var(--ink2)}
+.nodraft{padding:10px 12px;border-radius:8px;background:var(--stop-bg);color:var(--stop);font-weight:600}
+.hidden{display:none!important}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.roi-in label{display:block;margin-bottom:10px;font-size:14px}
+.roi-in small{color:var(--ink2);display:block}
+.big{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}
+td.n{text-align:right}
+.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0 16px}
+.step{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg)}
+.step b{display:block;margin-bottom:4px}
+.who-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.rep{color:var(--hot)}.sys{color:var(--accent)}
+pre.log{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:13px;max-height:220px;overflow:auto}
+@media (max-width:1000px){.desk{grid-template-columns:1fr}.queue{max-height:260px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>BDR Reply Desk</h1>
+  <p class="tag">The rep makes every call. The desk does the sorting, drafting and record cleanup. One rule set for higher ed and K-12, built to work for any Pearson BDR or inside sales team.</p>
+</header>
+<nav role="tablist">
+  <button role="tab" data-view="desk" aria-selected="true">Desk</button>
+  <button role="tab" data-view="roi" aria-selected="false">ROI</button>
+  <button role="tab" data-view="how" aria-selected="false">How it works</button>
+  <button role="tab" data-view="settings" aria-selected="false">Settings</button>
+</nav>
+
+<main>
+<section id="view-desk">
+  <div class="stats">
+    <div class="stat"><b id="s-queue">0</b><span>replies in queue</span></div>
+    <div class="stat"><b id="s-done">0</b><span>approved by rep</span></div>
+    <div class="stat"><b id="s-hot">0</b><span>meeting-ready replies</span></div>
+    <div class="stat"><b id="s-saved">0 min</b><span>saved this batch (est.)</span></div>
+  </div>
+  <div class="desk">
+    <div class="panel">
+      <h2>Morning batch</h2>
+      <select id="vfilter" style="margin-bottom:8px"><option value="ALL">All replies</option><option value="HE">Higher ed</option><option value="K12">K-12</option></select>
+      <ul class="queue" id="queue"></ul>
+      <div class="k">Paste a reply</div>
+      <textarea id="paste" style="min-height:90px" placeholder="Paste a prospect reply here (synthetic or your own test text)."></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn" id="add">Add to queue</button><button class="btn" id="reset">Reload sample batch</button></div>
+    </div>
+    <div class="panel" id="reply-panel">
+      <h2>Reply</h2>
+      <div id="reply"></div>
+    </div>
+    <div class="panel" id="decision-panel">
+      <h2>Decision for the rep</h2>
+      <div id="decision"></div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:12px">
+    <h2>Approved actions</h2>
+    <p class="note">Nothing here is sent or written anywhere. This is the list the rep works from in Salesforce and Gong. In production it becomes an approval card.</p>
+    <pre class="log" id="log">No approvals yet.</pre>
+    <div class="row"><button class="btn" id="copy-log">Copy as CSV</button><span class="note" id="copy-status"></span></div>
+  </div>
+</section>
+
+<section id="view-roi" class="hidden">
+  <div class="grid2">
+    <div class="panel roi-in">
+      <h2>Inputs</h2>
+      <label>Replies per rep per day <input type="number" id="r-replies" value="60" min="0"><small>Anthony's own volume.</small></label>
+      <label>Minutes per reply today <input type="number" id="r-manual" value="4" step="0.5" min="0"><small>Anthony's own estimate: read, decide, write, then Salesforce and Gong cleanup.</small></label>
+      <label>Minutes per reply with the desk <input type="number" id="r-desk" value="2" step="0.5" min="0"><small>Estimate. Reading and approving still takes time. To be measured in the pilot.</small></label>
+      <label>BDRs in the pilot <input type="number" id="r-reps" value="13" min="0"><small>My team, the first group to use it. The scale table shows larger rollouts.</small></label>
+      <label>Working days per year <input type="number" id="r-days" value="220" min="0"><small>Assumption.</small></label>
+      <label>Loaded cost per BDR hour ($) <input type="number" id="r-rate" value="36" min="0"><small>Assumption: $58,000 base / 2,080 hours x 1.3 for benefits and taxes.</small></label>
+      <label>Build and pilot hours <input type="number" id="r-build" value="80" min="0"><small>Assumption, using licenses Pearson already pays for (Copilot Studio, Power Automate).</small></label>
+      <label>Cost per build hour ($) <input type="number" id="r-buildrate" value="75" min="0"><small>Assumption.</small></label>
+    </div>
+    <div class="panel">
+      <h2>What it returns</h2>
+      <div class="k">Time back per rep per day</div><div class="big" id="o-perrep"></div>
+      <div class="k">Time back across the team per day</div><div class="big" id="o-team"></div>
+      <div class="k">Same as adding</div><div class="big" id="o-fte"></div>
+      <table style="margin-top:14px">
+        <tr><td>Hours returned per year</td><td class="n" id="o-hours"></td></tr>
+        <tr><td>Value of that time per year</td><td class="n" id="o-value"></td></tr>
+        <tr><td>One-time build and pilot cost</td><td class="n" id="o-cost"></td></tr>
+        <tr><td>First-year return on cost</td><td class="n" id="o-roi"></td></tr>
+        <tr><td>Payback</td><td class="n" id="o-payback"></td></tr>
+      </table>
+      <div class="k" style="margin-top:16px">Scale across Pearson</div>
+      <table id="scale"></table>
+      <p class="note">My team is 13 BDRs. Pearson has more BDR and inside sales reps across higher ed, K-12 and other businesses. I haven't confirmed the total, so the larger rows are illustrative. The value grows with each rep because the rules and templates are shared, so each new team adds only setup time.</p>
+      <p class="note" style="margin-top:12px">The real payoff isn't the payroll math. It's where the time goes. District-level outbound meetings come from phone calls, and the playbook sets a 40-call daily minimum. Every hour the desk returns is an hour for the phone.</p>
+    </div>
+  </div>
+</section>
+
+<section id="view-how" class="hidden">
+  <div class="panel">
+    <h2>The workflow, before and after</h2>
+    <p><b>Today:</b> every reply is handled by hand. Open it, decide what it is, find or write the right template, fill it in, then open Salesforce to fix the contact and Gong to fix the flow. Every rep does it differently, and most keep a private spreadsheet to track it.</p>
+    <p><b>With the desk:</b> replies are handled in one daily batch.</p>
+    <div class="flow">
+      <div class="step"><span class="who-tag sys">Desk</span><b>Sort</b>Classifies each reply into one of 15 types with fixed rules, and highlights the sentence that triggered it.</div>
+      <div class="step"><span class="who-tag sys">Desk</span><b>Assemble</b>Picks the template, pre-fills it, sets the flow action and lists the record cleanup.</div>
+      <div class="step"><span class="who-tag rep">Rep</span><b>Decide</b>Reads, edits, can override the category, and approves. Nothing moves without this step.</div>
+      <div class="step"><span class="who-tag rep">Rep</span><b>Call</b>The time saved goes to the phone, where district meetings get booked.</div>
+    </div>
+    <h2>One rule set, every vertical</h2>
+    <p>The workflow is the same whether the reply comes from a district office or a faculty member. The desk detects the vertical from the institution and adjusts the wording. The rules, guardrails and approval step don't change.</p>
+    <ul>
+      <li><b>Higher ed:</b> exam and desk copy requests, sabbaticals (treated as out of office, never do-not-contact), "I no longer teach this course" (the person stays active; only that course's outreach stops), adoption committees and course coordinators, and departments that switched platforms.</li>
+      <li><b>K-12:</b> retirements with a named successor, "talk to curriculum," district pricing questions with student counts, and summer auto-replies.</li>
+      <li><b>Any vertical:</b> bounces, opt-outs, out of office, interested, pricing, referrals and not interested work the same way. Adding a vertical means adding templates, not rebuilding anything.</li>
+    </ul>
+    <h2>Hard lines built into the code</h2>
+    <ul>
+      <li><b>Nothing sends.</b> The desk drafts; the rep sends.</li>
+      <li><b>No invented facts.</b> A successor's name or email is used only if it appears word for word in the reply. If the reply says someone retired and names no one, no one is added. Tests check this.</li>
+      <li><b>Out of office is never do-not-contact.</b> A leave of absence or sabbatical is treated as an auto-reply, even if it says "remove me." A faculty member who stops teaching a course stays an active contact.</li>
+      <li><b>Do-not-contact gets no reply,</b> and it's removed from every flow, not just one.</li>
+      <li><b>Same input, same output.</b> The rules are deterministic, so the desk can be audited and every decision can be explained.</li>
+      <li><b>No prospect data leaves the machine.</b> The prototype runs in the browser on synthetic replies.</li>
+    </ul>
+    <h2>Path to production</h2>
+    <ol>
+      <li><b>Week 1-2, pilot as a checklist.</b> The rep classifies first, then compares with the desk. Each disagreement either fixes a rule or captures knowledge nobody had written down.</li>
+      <li><b>Week 3-4, inside the Pearson tenant.</b> An Outlook rule feeds a folder. Power Automate runs the rules. A Teams approval card replaces this screen. Salesforce is the source of truth, because Gong can't write to the CRM.</li>
+      <li><b>Then share it.</b> The rules and templates are just a written standard, so every BDR and inside sales team in higher ed, K-12 or any other Pearson business gets the same triage, and a new hire gets it on day one.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="view-settings" class="hidden">
+  <div class="panel" style="max-width:520px">
+    <h2>Signature and names used in drafts</h2>
+    <label>Rep name<input type="text" id="set-rep" value="Anthony Degani"></label>
+    <label>Title<input type="text" id="set-title" value="Business Development Representative"></label>
+    <label>Company line<input type="text" id="set-company" value="Pearson Career Ready"></label>
+    <label>Territory manager<input type="text" id="set-tm" value="my territory manager"></label>
+    <label>Background clause<input type="text" id="set-bg" value="As a former teacher and coach"></label>
+    <p class="note">Changes apply to the next draft you open.</p>
+  </div>
+</section>
+</main>
+
+<script src="js/classifier.js"></script>
+<script src="js/templates.js"></script>
+<script src="data/sample-replies.js"></script>
+<script>
+(function(){
+  'use strict';
+  const C = window.ReplyDeskClassifier, T = window.ReplyDeskTemplates;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const HOT = ['INTERESTED','PRICING','INFO_REQUEST'];
+  let items = [], selected = null, nextId = 1000;
+
+  function settings(){ return { rep:$('set-rep').value, title:$('set-title').value, company:$('set-company').value, tm:$('set-tm').value, background:$('set-bg').value }; }
+
+  function load(){
+    items = window.SAMPLE_REPLIES.map(r => prep(Object.assign({}, r)));
+    selected = items[0].id; render();
+  }
+  function prep(r){
+    r.decision = C.classify(r);
+    r.category = r.decision.category;
+    r.draft = T.draft(r.decision, r, settings());
+    r.approved = false;
+    return r;
+  }
+  function redecide(r, cat){
+    const d = C.classify(r);
+    if (cat && cat !== d.category){
+      d.category = cat; d.label = C.CATEGORIES[cat].label; d.tone = C.CATEGORIES[cat].tone;
+      d.flowAction = C.FLOW_ACTIONS[cat]; d.checklist = C.CHECKLISTS[cat]; d.overridden = true;
+    }
+    r.decision = d; r.category = d.category; r.draft = T.draft(d, r, settings());
+  }
+
+  function render(){
+    const vf = $('vfilter').value;
+    $('queue').innerHTML = items.filter(r => vf==='ALL' || r.decision.vertical===vf).map(r => `<li data-id="${r.id}" class="${r.id===selected?'sel':''}">
+      <div class="who"><span>${esc(r.fromName||'Unknown sender')}</span>${r.approved?'<span class="done-mark">Approved</span>':''}</div>
+      <div class="sub">${esc(r.org||r.subject)}</div>
+      <span class="chip t-${r.decision.tone}">${esc(r.decision.label)}</span><span class="vchip">${r.decision.vertical==='HE'?'HE':'K-12'}</span></li>`).join('');
+    const done = items.filter(r=>r.approved).length;
+    const manual = +$('r-manual').value||4, desk = +$('r-desk').value||2;
+    $('s-queue').textContent = items.filter(r=>!r.approved).length;
+    $('s-done').textContent = done;
+    $('s-hot').textContent = items.filter(r=>HOT.includes(r.category)).length;
+    $('s-saved').textContent = Math.round(done*(manual-desk)) + ' min';
+    renderSelected(); renderLog();
+  }
+
+  function highlight(body, evidence){
+    const b = esc(body);
+    if (!evidence) return b;
+    const e = esc(evidence);
+    const i = b.indexOf(e);
+    return i === -1 ? b : b.slice(0,i) + '<mark>' + e + '</mark>' + b.slice(i+e.length);
+  }
+
+  function renderSelected(){
+    const r = items.find(x=>x.id===selected);
+    if (!r){ $('reply').innerHTML = '<p class="note">Pick a reply.</p>'; $('decision').innerHTML=''; return; }
+    const d = r.decision;
+    $('reply').innerHTML = `<div class="meta"><b>${esc(r.fromName||'')}</b> &lt;${esc(r.fromEmail||'')}&gt;<br>${esc(r.org||'')}<br>Subject: ${esc(r.subject||'')}</div>
+      <p class="body">${highlight(r.body, d.evidence)}</p>
+      <p class="note" style="margin-top:10px">Highlighted: the sentence that decided the category.</p>`;
+    const f = d.facts;
+    const factLines = [];
+    if (f.successorNames.length) factLines.push('Named in reply: ' + f.successorNames.map(esc).join(', '));
+    if (f.successorEmails.length && !['BOUNCE'].includes(d.category)) factLines.push('Email in reply: ' + f.successorEmails.map(esc).join(', '));
+    if (f.returnDate) factLines.push('Return: ' + esc(f.returnDate));
+    if (f.scope.length) factLines.push('Scope they gave: ' + f.scope.map(esc).join(', '));
+    const opts = Object.keys(C.CATEGORIES).map(k=>`<option value="${k}" ${k===d.category?'selected':''}>${esc(C.CATEGORIES[k].label)}</option>`).join('');
+    $('decision').innerHTML = `
+      <div class="row"><span class="chip t-${d.tone}" style="font-size:14px">${esc(d.label)}</span>
+        <span class="vchip">${d.vertical==='HE'?'Higher ed':'K-12'}</span>
+        <span class="note">${d.overridden?'Set by rep':'Confidence: '+esc(d.confidence)}</span></div>
+      <div class="k">Change category</div><select id="override">${opts}</select>
+      <div class="k">Facts taken from the reply</div>
+      ${factLines.length?'<ul class="facts">'+factLines.map(l=>'<li>'+l+'</li>').join('')+'</ul>':'<p class="note" style="margin:0">None. The desk does not fill gaps.</p>'}
+      <div class="k">Flow action</div><div class="action">${esc(d.flowAction)}</div>
+      <div class="k">Record cleanup</div>
+      <div class="checklist">${d.checklist.map((c,i)=>`<label><input type="checkbox" data-c="${i}"> <span>${esc(c)}</span></label>`).join('')}</div>
+      <div class="k">Draft reply</div>
+      ${r.draft===null?'<div class="nodraft">No reply for this one. That is intentional.</div>':`<textarea id="draft">${esc(r.draft)}</textarea>`}
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="approve" ${r.approved?'disabled':''}>${r.approved?'Approved':'Approve'}</button>
+        <button class="btn" id="next">Next reply</button>
+      </div>
+      <p class="note">Approving adds this to the action list below. Nothing is sent or written to Salesforce or Gong.</p>`;
+    $('override').onchange = (e)=>{ redecide(r, e.target.value); r.approved=false; render(); };
+    const dt = $('draft'); if (dt) dt.oninput = ()=>{ r.draft = dt.value; };
+    $('approve').onclick = ()=>{ r.approved = true; r.approvedAt = new Date(); goNext(); };
+    $('next').onclick = goNext;
+  }
+
+  function goNext(){
+    const open = items.filter(x=>!x.approved);
+    const idx = items.findIndex(x=>x.id===selected);
+    const after = items.slice(idx+1).find(x=>!x.approved) || open[0];
+    selected = after ? after.id : selected; render();
+  }
+
+  function logRows(){
+    return items.filter(r=>r.approved).map(r=>({
+      contact:r.fromName||'', org:r.org||'', category:r.decision.label,
+      flow_action:r.decision.flowAction, successor:(r.decision.facts.successorNames[0]||r.decision.facts.successorEmails[0]||''),
+      reply_drafted:r.draft?'yes':'no'
+    }));
+  }
+  function renderLog(){
+    const rows = logRows();
+    $('log').textContent = rows.length ? rows.map(x=>`${x.contact} (${x.org}): ${x.category}. ${x.flow_action}${x.successor?' Successor from reply: '+x.successor+'.':''}`).join('\n') : 'No approvals yet.';
+  }
+  $('copy-log').onclick = async ()=>{
+    const rows = logRows(); if (!rows.length){ $('copy-status').textContent='Nothing approved yet.'; return; }
+    const head = Object.keys(rows[0]);
+    const csv = [head.join(',')].concat(rows.map(r=>head.map(h=>'"'+String(r[h]).replace(/"/g,'""')+'"').join(','))).join('\n');
+    try { await navigator.clipboard.writeText(csv); $('copy-status').textContent='Copied.'; }
+    catch(e){ $('copy-status').textContent='Copy was blocked here. Select the list above instead.'; }
+  };
+
+  $('queue').onclick = (e)=>{ const li = e.target.closest('li'); if (li){ selected = +li.dataset.id; render(); } };
+  $('add').onclick = ()=>{
+    const body = $('paste').value.trim(); if (!body) return;
+    const r = prep({ id: nextId++, fromName:'Pasted reply', fromFirst:'there', fromEmail:'', org:'', subject:'(pasted)', body });
+    items.unshift(r); selected = r.id; $('paste').value=''; render();
+  };
+  $('reset').onclick = load;
+  $('vfilter').onchange = render;
+
+  document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected', x===b?'true':'false'));
+    ['desk','roi','how','settings'].forEach(v=>$('view-'+v).classList.toggle('hidden', v!==b.dataset.view));
+    if (b.dataset.view==='desk') { items.forEach(r=>{ if(!r.approved) r.draft = T.draft(r.decision, r, settings()); }); render(); }
+  });
+
+  const fmt$ = (n)=>'$'+Math.round(n).toLocaleString('en-US');
+  function roi(){
+    const v = id => Math.max(0, +$(id).value || 0);
+    const perRepMin = v('r-replies') * Math.max(0, v('r-manual') - v('r-desk'));
+    const teamHrs = perRepMin * v('r-reps') / 60;
+    const yearHrs = teamHrs * v('r-days');
+    const value = yearHrs * v('r-rate');
+    const cost = v('r-build') * v('r-buildrate');
+    $('o-perrep').textContent = (perRepMin/60).toFixed(1) + ' hours';
+    $('o-team').textContent = teamHrs.toFixed(1) + ' hours';
+    $('o-fte').textContent = (teamHrs/8).toFixed(1) + ' BDRs of capacity';
+    $('o-hours').textContent = Math.round(yearHrs).toLocaleString('en-US');
+    $('o-value').textContent = fmt$(value);
+    $('o-cost').textContent = fmt$(cost);
+    $('o-roi').textContent = cost ? Math.round((value-cost)/cost*100).toLocaleString('en-US') + '%' : 'n/a';
+    const perBdrYear = v('r-replies') * Math.max(0, v('r-manual') - v('r-desk')) / 60 * v('r-days') * v('r-rate');
+    $('scale').innerHTML = '<tr><th>Reps using it</th><th style="text-align:right">Hours back per year</th><th style="text-align:right">Value per year</th></tr>' +
+      [[v('r-reps'),'Pilot (my team)'],[50,'Illustrative'],[100,'Illustrative'],[250,'Illustrative']].map(([n,l]) =>
+      `<tr><td>${n} <span class="note">${l}</span></td><td class="n">${Math.round(perRepMin/60*v('r-days')*n).toLocaleString('en-US')}</td><td class="n">${fmt$(perBdrYear*n)}</td></tr>`).join('') +
+      `<tr><td colspan="3" class="note">Per rep: ${fmt$(perBdrYear)} a year of time returned.</td></tr>`;
+    $('o-payback').textContent = value ? ((cost/(value/v('r-days')))||0).toFixed(1) + ' working days' : 'n/a';
+    render();
+  }
+  document.querySelectorAll('#view-roi input').forEach(i=>i.oninput=roi);
+
+  load(); roi();
+})();
+</script>
+</body>
+</html>
